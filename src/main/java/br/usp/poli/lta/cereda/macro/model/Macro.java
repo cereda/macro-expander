@@ -165,7 +165,12 @@ public class Macro {
      */
     @Override
     public String toString() {
-        return "Macro: { " + "nome = " + name + ", parâmetros = " + parameters + ", corpo = " + body + " }";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Macro: {");
+        sb.append("nome = ").append(name).append(",");
+        sb.append("parâmetros = ").append(parameters).append(",");
+        sb.append("corpo = ").append(body).append(" }");       
+        return sb.toString();
     }
 
 }

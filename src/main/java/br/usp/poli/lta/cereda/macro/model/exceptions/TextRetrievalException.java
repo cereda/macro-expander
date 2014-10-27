@@ -20,19 +20,20 @@
 package br.usp.poli.lta.cereda.macro.model.exceptions;
 
 /**
- * Implementa a classe de exceção para tratar duplicação de contadores.
+ * Implementa a classe de exceção para tratar de situações nas quais o texto
+ * não pode ser obtido.
  * @author Paulo Roberto Massa Cereda
  * @version 1.0
  * @since 1.0
  */
-public class DuplicateCounterException extends Exception {
+public class TextRetrievalException extends Exception {
 
     /**
      * Construtor.
-     * @param message Mensagem da exceção.
+     * @param message Mensagem a ser lançada pela exceção.
      */
-    public DuplicateCounterException(String message) {
+    public TextRetrievalException(String message) {
         super(message);
     }
-        
+    
 }

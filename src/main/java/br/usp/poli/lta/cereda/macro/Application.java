@@ -42,11 +42,27 @@ public class Application {
     public static void main(String[] args) {
         
         // imprime banner
-        System.out.println(StringUtils.repeat("-", 50));
-        System.out.println(StringUtils.center("Expansor de macros", 50));
-        System.out.println(StringUtils.repeat("-", 50));
-        System.out.println(StringUtils.center("Laboratório de linguagens e técnicas adaptativas", 50));
-        System.out.println(StringUtils.center("Escola Politécnica - Universidade de São Paulo", 50));
+        System.out.println(
+                StringUtils.repeat("-", 50)
+        );
+        System.out.println(
+                StringUtils.center("Expansor de macros", 50)
+        );
+        System.out.println(
+                StringUtils.repeat("-", 50)
+        );
+        System.out.println(
+                StringUtils.center(
+                        "Laboratório de linguagens e técnicas adaptativas",
+                        50
+                )
+        );
+        System.out.println(
+                StringUtils.center(
+                        "Escola Politécnica - Universidade de São Paulo",
+                        50
+                )
+        );
         System.out.println();
         
         try {
@@ -65,7 +81,11 @@ public class Application {
                 // texto nele, ou imprime o resultado no terminal, caso
                 // contrário
                 if (pair.getSecond() != null) {
-                    FileUtils.writeStringToFile(pair.getSecond(), output, Charset.forName("UTF-8"));
+                    FileUtils.writeStringToFile(
+                            pair.getSecond(),
+                            output,
+                            Charset.forName("UTF-8")
+                    );
                     System.out.println("Arquivo gerado com sucesso.");
                 }
                 else {

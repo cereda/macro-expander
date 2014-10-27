@@ -96,18 +96,28 @@ public class CLIParser {
                     new File(line.getOptionValue("output")) : null;
             
             if (out == null) {
-                logger.info("A saída será gerada no terminal.");
+                logger.info(
+                        "A saída será gerada no terminal."
+                );
             }
             else {
-                logger.info("A saída será gerada no arquivo '{}'.", out.getName());
+                logger.info(
+                        "A saída será gerada no arquivo '{}'.",
+                        out.getName()
+                );
             }
             
             // faz a leitura de todos os arquivos e concatena seu conteúdo em
             // uma variável
-            logger.info("Iniciando a leitura dos arquivos de entrada.");
+            logger.info(
+                    "Iniciando a leitura dos arquivos de entrada."
+            );
             String[] files = line.getOptionValues("input");
             for (String file : files) {
-                logger.info("Lendo arquivo '{}'.", file);
+                logger.info(
+                        "Lendo arquivo '{}'.",
+                        file
+                );
                 text = text.concat(FileUtils.readFileToString(
                         new File(file), Charset.forName("UTF-8"))
                 );
@@ -122,7 +132,10 @@ public class CLIParser {
             
             // imprime a ajuda
             HelpFormatter help = new HelpFormatter();
-            help.printHelp("expander --input <lista de arquivos> [ --output <arquivo> ]", options);
+            help.printHelp(
+                    "expander --input <lista de arquivos> [ --output <arquivo> ]",
+                    options
+            );
         }
 
         // retorna um valor inválido indicando para não prosseguir com o
@@ -130,7 +143,5 @@ public class CLIParser {
         return null;
         
     }
-    
-    
     
 }

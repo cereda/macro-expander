@@ -35,6 +35,7 @@ import br.usp.poli.lta.cereda.macro.model.exceptions.MacroNotFoundException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.MalformedArgumentException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.MalformedMacroException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.PotentialInfiniteRecursionException;
+import br.usp.poli.lta.cereda.macro.model.exceptions.TextRetrievalException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,10 +67,11 @@ public class MacroUtils {
     
     // expressão regular que define as primitivas suportadas pelo expansor
     private static final String REGEX_PRIMITIVES =
-            "^\\s*(\\bcomment\\b|\\bnew\\s+line\\b|\\bnew\\s+page\\b|\\bno\\s+expand\\b|\\brepeat\\b|\\binput\\s+text\\b|\\bsend\\s+message\\b|\\bdefine\\b|\\bglobal\\s+define\\b|\\bfor\\s+each\\b|\\bincrement\\b|\\bdecrement\\b|\\bincrement\\s+counter\\b|\\bdecrement\\s+counter\\b|\\bset\\s+counter\\b|\\bnew\\s+counter\\b|\\bcounter\\b|\\bcheck\\s+condition\\b|\\bis\\s+zero\\b|\\bis\\s+greater\\s+than\\b|\\bis\\s+less\\s+than\\b|\\bis\\s+equal\\b)\\s*?";
+            "^\\s*(\\bcomment\\b|\\bnew\\s+line\\b|\\bnew\\s+page\\b|\\bno\\s+expand\\b|\\brepeat\\b|\\binput\\s+text\\b|\\bsend\\s+message\\b|\\bdefine\\b|\\bglobal\\s+define\\b|\\bfor\\s+each\\b|\\bincrement\\b|\\bdecrement\\b|\\bincrement\\s+counter\\b|\\bdecrement\\s+counter\\b|\\bset\\s+counter\\b|\\bnew\\s+counter\\b|\\bcounter\\b|\\bcheck\\s+condition\\b|\\bis\\s+zero\\b|\\bis\\s+greater\\s+than\\b|\\bis\\s+less\\s+than\\b|\\bis\\s+equal\\b|\\bupload\\s+to\\s+google\\s+drive\\b|\\bget\\s+from\\s+google\\s+drive\\b|\\bget\\s+url\\b)\\s*?";
 
     // conjunto de símbolos ignorados pelo autômato
-    private static final Set<Character> ignored = new HashSet<>(Arrays.asList(' ', '\t', '\n', '\r'));
+    private static final Set<Character> ignored =
+            new HashSet<>(Arrays.asList(' ', '\t', '\n', '\r'));
     
     /**
      * Procura a macro paramêtrica em todos os escopos, a partir do local,
@@ -82,7 +84,11 @@ public class MacroUtils {
     public static Macro find(String name, int parameters)
             throws MacroNotFoundException {
 
-        logger.info("Tentando encontrar a macro '{}' com {} parâmetros em todos os escopos.", name, parameters);
+        logger.info(
+                "Tentando encontrar a macro '{}' com {} parâmetros em todos os escopos.",
+                name,
+                parameters
+        );
 
         // obtém a pilha do controlador de escopos
         Stack<Set<Macro>> stack = ScopeController.getInstance().getStack();
@@ -94,7 +100,10 @@ public class MacroUtils {
         // inserido até o primeiro escopo (por definição, o escopo 0 é global).
         for (int i = scopes.size() - 1; i >= 0; i--) {
             
-            logger.info("Procurando a macro no escopo {}.", i);
+            logger.info(
+                    "Procurando a macro no escopo {}.",
+                    i
+            );
             
             // procura pela macro no escopo corrente, procurando pelo nome e o
             // número de parâmetros
@@ -104,7 +113,11 @@ public class MacroUtils {
                 if (macro.getName().equals(name) &&
                         macro.getParameters().size() == parameters) {
                     
-                    logger.info("Encontrei a macro '{}' no escopo {}.", name, i);
+                    logger.info(
+                            "Encontrei a macro '{}' no escopo {}.",
+                            name,
+                            i
+                    );
                     
                     return macro;
                 }
@@ -112,11 +125,19 @@ public class MacroUtils {
             }
         }
         
-        logger.error("A macro '{}' com {} parâmetros não foi encontrada nos escopos.", name, parameters);
+        logger.error(
+                "A macro '{}' com {} parâmetros não foi encontrada nos escopos.",
+                name,
+                parameters
+        );
         
         // a macro não foi encontrada, lançar exceção
         throw new MacroNotFoundException(
-                String.format("A macro '%s' (%d) não foi encontrada nos escopos.", name, parameters)
+                String.format(
+                        "A macro '%s' (%d) não foi encontrada nos escopos.",
+                        name,
+                        parameters
+                )
         );
     }
 
@@ -142,12 +163,19 @@ public class MacroUtils {
             throws PotentialInfiniteRecursionException {
         
         calls++;
-        logger.info("Entrando na expansão ({}).", calls);
+        logger.info(
+                "Entrando na expansão ({}).",
+                calls
+        );
         
         // o limite máximo de chamadas sem retornar foi alcançado
         if (calls > 500) {
-            logger.error("A execução atingiu 500 chamadas internas, o que indica uma recursão infinita em potencial.");
-            throw new PotentialInfiniteRecursionException("A execução atingiu 500 chamadas internas, o que indica uma recursão infinita em potencial.");
+            logger.error(
+                    "A execução atingiu 500 chamadas internas, o que indica uma recursão infinita em potencial."
+            );
+            throw new PotentialInfiniteRecursionException(
+                    "A execução atingiu 500 chamadas internas, o que indica uma recursão infinita em potencial."
+            );
         }
     }
 
@@ -155,7 +183,9 @@ public class MacroUtils {
      * Decrementa o contador de chamadas ao expansor.
      */
     public static void exitExpansion() {
-        logger.info("Saindo da expansão.");
+        logger.info(
+                "Saindo da expansão."
+        );
         calls--;
     }
 
@@ -168,7 +198,11 @@ public class MacroUtils {
     public static Primitive checkPrimitive(String name,
             Map<Integer, String> parameters) {
         
-        logger.info("Verificando se a macro '{}' com parâmetros '{}' é uma primitiva.", name, parameters);
+        logger.info(
+                "Verificando se a macro '{}' com parâmetros '{}' é uma primitiva.",
+                name,
+                parameters
+        );
 
         // utiliza-se uma expressão regular para verificar se a macro fornecida
         // é uma primitiva
@@ -179,7 +213,10 @@ public class MacroUtils {
         if (matcher.matches()) {
             String primitive = matcher.group(1).replaceAll("\\s+", " ").trim();
 
-            logger.info("A primitiva {} foi encontrada.", primitive);
+            logger.info(
+                    "A primitiva {} foi encontrada.",
+                    primitive
+            );
             Primitive result;
 
             if (primitive.equals("comment")) {
@@ -266,7 +303,22 @@ public class MacroUtils {
                                                                                                 result = Primitive.ISLESSTHAN;
                                                                                             }
                                                                                             else {
-                                                                                                result = Primitive.ISEQUAL;
+                                                                                                if (primitive.equals("is equal")) {
+                                                                                                    result = Primitive.ISEQUAL;
+                                                                                                }
+                                                                                                else {
+                                                                                                    if (primitive.equals("upload to google drive")) {
+                                                                                                        result = Primitive.UPLOADTOGOOGLEDRIVE;
+                                                                                                    }
+                                                                                                    else {
+                                                                                                        if (primitive.equals("get from google drive")) {
+                                                                                                            result = Primitive.GETFROMGOOGLEDRIVE;
+                                                                                                        }
+                                                                                                        else {
+                                                                                                            result = Primitive.GETURL;
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
                                                                                             }
                                                                                         }
                                                                                     }
@@ -318,13 +370,21 @@ public class MacroUtils {
      * @throws MacroNotFoundException A macro não foi encontrada.
      * @throws MalformedMacroException A macro está mal formada (provavelmente
      * um erro sintático)
+     * @throws InvalidConditionValueException O valor indicado na condição é
+     * inválido.
+     * @throws DuplicateCounterException O contador já existe no gerenciador.
+     * @throws CounterNotFoundException O contador não existe no gerenciador.
+     * @throws TextRetrievalException Ocorreu um erro na tentativa de
+     * recuperação do texto.
      */
     public static String handlePrimitive(Primitive primitive,
             Map<Integer, String> parameters) throws MalformedArgumentException,
             ArgumentNumberMismatchException,
             PotentialInfiniteRecursionException, InvalidIntegerRangeException,
             MacroDefinitionException, DuplicateMacroException,
-            MacroNotFoundException, MalformedMacroException, InvalidConditionValueException, DuplicateCounterException, CounterNotFoundException {
+            MacroNotFoundException, MalformedMacroException,
+            InvalidConditionValueException, DuplicateCounterException,
+            CounterNotFoundException, TextRetrievalException {
 
         // cadeia de saída, inicialmente vazia
         String output = EMPTY_STRING;
@@ -335,13 +395,19 @@ public class MacroUtils {
             case DEFINE:
             case GLOBALDEFINE:
 
-                logger.info("Encontrei uma primitiva de definição de novas macros.");
+                logger.info(
+                        "Encontrei uma primitiva de definição de novas macros."
+                );
 
                 // o número de parâmetros é inválido
                 if (parameters.size() != 1) {
                     
-                    logger.info("A definição de novas macros requer um parâmetro.");
-                    throw new ArgumentNumberMismatchException("A definição de novas macros requer um parâmetro.");
+                    logger.info(
+                            "A definição de novas macros requer um parâmetro."
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            "A definição de novas macros requer um parâmetro."
+                    );
                 }
 
                 // define-se uma nova macro a partir do parâmetro da primitiva
@@ -353,8 +419,16 @@ public class MacroUtils {
                 if (primitive == Primitive.DEFINE) {
                     
                     if (!ScopeController.getInstance().addMacroToCurrentScope(macro)) {
-                        logger.error("Não foi possível adicionar a macro {} no escopo corrente. Ela já está definida.", macro);
-                        throw new DuplicateMacroException("Não foi possível adicionar a macro " + macro + " no escopo corrente. Ela já está definida.");
+                        logger.error(
+                                "Não foi possível adicionar a macro '{}' no escopo corrente. Ela já está definida.",
+                                macro
+                        );
+                        throw new DuplicateMacroException(
+                                String.format(
+                                        "Não foi possível adicionar a macro '%s' no escopo corrente. Ela já está definida.",
+                                        macro
+                                )
+                        );
                     }
                     
                 }
@@ -364,8 +438,16 @@ public class MacroUtils {
                     // ou lança-se um erro caso uma macro com as mesmas 
                     // características já exista no escopo
                     if (!ScopeController.getInstance().addMacroToGlobalScope(macro)) {
-                        logger.error("Não foi possível adicionar a macro {} no escopo global. Ela já está definida.", macro);
-                        throw new DuplicateMacroException("Não foi possível adicionar a macro " + macro + " no escopo global. Ela já está definida.");
+                        logger.error(
+                                "Não foi possível adicionar a macro '{}' no escopo global. Ela já está definida.",
+                                macro
+                        );
+                        throw new DuplicateMacroException(
+                                String.format(
+                                        "Não foi possível adicionar a macro '%s' no escopo global. Ela já está definida.",
+                                        macro
+                                )
+                        );
                     }
                 }
 
@@ -373,12 +455,18 @@ public class MacroUtils {
 
             case NEWLINE:
 
-                logger.info("Encontrei uma primitiva de definição de nova linha.");
+                logger.info(
+                        "Encontrei uma primitiva de definição de nova linha."
+                );
 
                 // o número de parâmetros é inválido, tem que ser vazio
                 if (!parameters.isEmpty()) {
-                    logger.info("A definição de nova linha não tem parâmetro.");
-                    throw new ArgumentNumberMismatchException("A definição de nova linha não tem parâmetro.");
+                    logger.info(
+                            "A definição de nova linha não tem parâmetro."
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            "A definição de nova linha não tem parâmetro."
+                    );
                 }
 
                 // define o valor da cadeia de saída
@@ -387,12 +475,18 @@ public class MacroUtils {
 
             case NEWPAGE:
 
-                logger.info("Encontrei uma primitiva de definição de nova página.");
+                logger.info(
+                        "Encontrei uma primitiva de definição de nova página."
+                );
 
                 // o número de parâmetros é inválido, tem que ser vazio
                 if (!parameters.isEmpty()) {
-                    logger.info("A definição de nova página não tem parâmetro.");
-                    throw new ArgumentNumberMismatchException("A definição de nova página não tem parâmetro.");
+                    logger.info(
+                            "A definição de nova página não tem parâmetro."
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            "A definição de nova página não tem parâmetro."
+                    );
                 }
 
                 // define o valor da cadeia de saída
@@ -401,12 +495,18 @@ public class MacroUtils {
 
             case NOEXPAND:
 
-                logger.info("Encontrei uma primitiva de bloco literal.");
+                logger.info(
+                        "Encontrei uma primitiva de bloco literal."
+                );
 
                 // o número de parâmetros é inválido
                 if (parameters.size() != 1) {
-                    logger.info("A primitiva de bloco literal requer um parâmetro.");
-                    throw new ArgumentNumberMismatchException("A primitiva de bloco literal requer um parâmetro.");
+                    logger.info(
+                            "A primitiva de bloco literal requer um parâmetro."
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            "A primitiva de bloco literal requer um parâmetro."
+                    );
                 }
 
                 // define o valor da cadeia de saída, que é o bloco literal
@@ -419,38 +519,57 @@ public class MacroUtils {
 
                 // o número de parâmetros é inválido
                 if (parameters.size() != 2) {
-                    logger.error("O número de parâmetros da primitiva {} não confere (a primitiva requer 2 parâmetros). Foi encontrado: {}", primitive, parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva " + primitive + " não confere. (a primitiva requer 2 parâmetros). Foi encontrado: " + parameters);
+                    logger.error(
+                            "O número de parâmetros da primitiva '{}' não confere (a primitiva requer dois parâmetros). Foi encontrado: {}",
+                            primitive,
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format("O número de parâmetros da primitiva '%s' não confere. (a primitiva requer dois parâmetros). Foi encontrado: %s",
+                                    primitive, parameters
+                            )
+                    );
                 }
 
                 // se é uma entrada de texto, exibe a tela de diálogo para a
                 // entrada do texto
                 if (primitive == Primitive.INPUTTEXT) {
 
-                    logger.info("Tratando a primitiva input text.");
+                    logger.info(
+                            "Tratando a primitiva 'input text'."
+                    );
 
                     // cria-se um novo escopo, trata do primeiro parâmetro
                     ScopeController.getInstance().createNewScope();
                     Expander expander = new Expander();
 
-                    logger.info("Expandindo o primeiro parâmetro.");
+                    logger.info(
+                            "Expandindo o primeiro parâmetro."
+                    );
                     String first = expander.parse(parameters.get(1));
 
                     // cria-se um novo escopo, trata do segundo parâmetro
                     ScopeController.getInstance().createNewScope();
                     expander = new Expander();
 
-                    logger.info("Expandindo o segundo parâmetro.");
+                    logger.info(
+                            "Expandindo o segundo parâmetro."
+                    );
                     String second = expander.parse(parameters.get(2));
 
                     // exibe a tela de diálogo e obtém o texto
-                    logger.info("Exibindo a janela de edição.");
-                    Pair<Boolean, String> pair = DisplayUtils.getInputText(first, second);
+                    logger.info(
+                            "Exibindo a janela de edição."
+                    );
+                    Pair<Boolean, String> pair =
+                            DisplayUtils.getInputText(first, second);
 
                     // verifica se o texto retornado deve ser expandido
                     if (pair.getFirst()) {
 
-                        logger.info("Expandindo o texto informado.");
+                        logger.info(
+                                "Expandindo o texto informado."
+                        );
                         
                         // cria-se um novo escopo, trata do texto informado
                         ScopeController.getInstance().createNewScope();
@@ -473,37 +592,49 @@ public class MacroUtils {
                     // verifica se a primitiva é de envio de mensagem
                     if (primitive == Primitive.SENDMESSAGE) {
 
-                        logger.info("Tratando a primitiva send message.");
+                        logger.info(
+                                "Tratando a primitiva 'send message'."
+                        );
 
                         // cria-se um novo escopo, trata do primeiro parâmetro
                         ScopeController.getInstance().createNewScope();
                         Expander expander = new Expander();
 
-                        logger.info("Expandindo o primeiro parâmetro.");
+                        logger.info(
+                                "Expandindo o primeiro parâmetro."
+                        );
                         String first = expander.parse(parameters.get(1));
 
                         // cria-se um novo escopo, trata do segundo parâmetro
                         ScopeController.getInstance().createNewScope();
                         expander = new Expander();
 
-                        logger.info("Expandindo o segundo parâmetro.");
+                        logger.info(
+                                "Expandindo o segundo parâmetro."
+                        );
                         String second = expander.parse(parameters.get(2));
 
                         // exibe a mensagem
-                        logger.info("Exibindo a mensagem ao usuário.");
+                        logger.info(
+                                "Exibindo a mensagem ao usuário."
+                        );
                         DisplayUtils.showMessage(first, second);
 
                     }
                     else {
 
                         // trata da primitiva de repetição
-                        logger.info("Tratando a primitiva repeat.");
+                        logger.info(
+                                "Tratando a primitiva 'repeat'."
+                        );
 
                         // cria-se um novo escopo, trata do primeiro parâmetro
                         ScopeController.getInstance().createNewScope();
                         Expander expander = new Expander();
 
-                        logger.info("Expandindo o primeiro parâmetro.");
+                        logger.info(
+                                "Expandindo o primeiro parâmetro."
+                        );
                         String first = expander.parse(parameters.get(1));
 
                         // a primitiva de repetição requer um valor inteiro
@@ -511,18 +642,28 @@ public class MacroUtils {
                         
                         // converte o valor textual para um valor inteiro
                         try {
-                            logger.info("Tentando converter o primeiro parâmetro para um valor inteiro.");
+                            logger.info(
+                                    "Tentando converter o primeiro parâmetro para um valor inteiro."
+                            );
                             times = Integer.parseInt(first.trim());
                         }
                         catch (NumberFormatException exception) {
-                            logger.error("Não foi possível converter o parâmetro da primitiva repeat, esperando um valor inteiro.");
-                            throw new NumberFormatException("Não foi possível converter o parâmetro da primitiva repeat, esperando um valor inteiro.");
+                            logger.error(
+                                    "Não foi possível converter o parâmetro da primitiva 'repeat', esperando um valor inteiro."
+                            );
+                            throw new NumberFormatException(
+                                    "Não foi possível converter o parâmetro da primitiva 'repeat', esperando um valor inteiro."
+                            );
                         }
 
                         // verifica o intervalo do valor inteiro
                         if (times <= 0) {
-                            logger.error("O primeiro parâmetro possui um intervalo inválido.");
-                            throw new InvalidIntegerRangeException("O primeiro parâmetro possui um intervalo inválido.");
+                            logger.error(
+                                    "O primeiro parâmetro possui um intervalo inválido."
+                            );
+                            throw new InvalidIntegerRangeException(
+                                    "O primeiro parâmetro possui um intervalo inválido."
+                            );
                         }
 
                         // repete a expansão de acordo com o número de vezes
@@ -534,10 +675,16 @@ public class MacroUtils {
                             ScopeController.getInstance().createNewScope();
                             expander = new Expander();
 
-                            logger.info("(Iteração {}) Expandindo o segundo parâmetro.", i);
+                            logger.info(
+                                    "(Iteração {}) Expandindo o segundo parâmetro.",
+                                    i
+                            );
                             String second = expander.parse(parameters.get(2));
 
-                            logger.info("(Iteração {}) Adicionando a saída na repetição.", i);
+                            logger.info(
+                                    "(Iteração {}) Adicionando a saída na repetição.",
+                                    i
+                            );
                             output = output + second;
 
                         }
@@ -549,8 +696,13 @@ public class MacroUtils {
                 
                 // o número de parâmetros é inválido
                 if (parameters.size() < 2) {
-                    logger.error("O número de parâmetros da primitiva foreach não confere (a primitiva requer no mínimo 2 parâmetros). Foi encontrado: {}", parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva foreach não confere. (a primitiva requer no mínimo 2 parâmetros). Foi encontrado: " + parameters);
+                    logger.error("O número de parâmetros da primitiva 'foreach' não confere (a primitiva requer no mínimo dois parâmetros). Foi encontrado: {}", parameters);
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva 'foreach' não confere. (a primitiva requer no mínimo dois parâmetros). Foi encontrado: %s",
+                                    parameters
+                            )
+                    );
                 }
                 else {
                     
@@ -587,8 +739,16 @@ public class MacroUtils {
                 
                 // o número de parâmetros é inválido
                 if (parameters.size() != 3) {
-                    logger.error("O número de parâmetros da primitiva check condition não confere (a primitiva requer 3 parâmetros). Foi encontrado: {}", parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva check condition não confere. (a primitiva requer 3 parâmetros). Foi encontrado: " + parameters);
+                    logger.error(
+                            "O número de parâmetros da primitiva 'check condition' não confere (a primitiva requer três parâmetros). Foi encontrado: {}",
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva 'check condition' não confere. (a primitiva requer três parâmetros). Foi encontrado: %s",
+                                    parameters
+                            )
+                    );
                 }
                 else {
                     
@@ -611,8 +771,16 @@ public class MacroUtils {
                 
                 // o número de parâmetros é inválido
                 if (parameters.size() != 1) {
-                    logger.error("O número de parâmetros da primitiva new counter não confere (a primitiva requer 1 parâmetro). Foi encontrado: {}", parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva new counter não confere. (a primitiva requer 1 parâmetro). Foi encontrado: " + parameters);
+                    logger.error(
+                            "O número de parâmetros da primitiva 'new counter' não confere (a primitiva requer um parâmetro). Foi encontrado: {}",
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva 'new counter' não confere. (a primitiva requer um parâmetro). Foi encontrado: %s",
+                                    parameters
+                            )
+                    );
                 }
                 else {
                     
@@ -623,7 +791,12 @@ public class MacroUtils {
                     
                     // se o contador já existe, é um erro de definição
                     if (Counters.getInstance().contains(name)) {
-                        throw new DuplicateCounterException("O contador '" + name +"' já está definido.");
+                        throw new DuplicateCounterException(
+                                String.format(
+                                        "O contador '%s' já está definido.",
+                                        name
+                                )
+                        );
                     }
                     else {
                         
@@ -639,8 +812,16 @@ public class MacroUtils {
                 
                 // o número de parâmetros é inválido
                 if (parameters.size() != 2) {
-                    logger.error("O número de parâmetros da primitiva set counter não confere (a primitiva requer 2 parâmetros). Foi encontrado: {}", parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva set counter não confere. (a primitiva requer 2 parâmetros). Foi encontrado: " + parameters);
+                    logger.error(
+                            "O número de parâmetros da primitiva 'set counter' não confere (a primitiva requer dois parâmetros). Foi encontrado: {}",
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva 'set counter' não confere. (a primitiva requer dois parâmetros). Foi encontrado: %s",
+                                    parameters
+                            )
+                    );
                 }
                 else {
                     
@@ -660,7 +841,9 @@ public class MacroUtils {
                         value = Integer.parseInt(parameter.trim());
                     }
                     catch (NumberFormatException exception) {
-                        throw new NumberFormatException("Não foi possível converter o valor do contador para uma representação inteira.");
+                        throw new NumberFormatException(
+                                "Não foi possível converter o valor do contador para uma representação inteira."
+                        );
                     }
                     
                     // tenta atribuir o novo valor ao contador
@@ -668,7 +851,11 @@ public class MacroUtils {
                         Counters.getInstance().set(name, value);
                     }
                     else {
-                        throw new CounterNotFoundException("Não foi possível definir o valor do contador '" + name + "' porque ele não foi definido.");
+                        throw new CounterNotFoundException(
+                                String.format(
+                                        "Não foi possível definir o valor do contador '%s' porque este não foi definido.", name
+                                )
+                        );
                     }
                 }
             
@@ -678,8 +865,16 @@ public class MacroUtils {
                 
                 // número inválido de parâmetros
                 if (parameters.size() != 1) {
-                    logger.error("O número de parâmetros da primitiva counter não confere (a primitiva requer 1 parâmetro). Foi encontrado: {}", parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva counter não confere. (a primitiva requer 1 parâmetro). Foi encontrado: " + parameters);
+                    logger.error(
+                            "O número de parâmetros da primitiva counter não confere (a primitiva requer um parâmetro). Foi encontrado: {}",
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva 'counter' não confere. (a primitiva requer um parâmetro). Foi encontrado: %s",
+                                    parameters
+                            )
+                    );
                 }
                 else {
                     
@@ -695,7 +890,12 @@ public class MacroUtils {
                                 Counters.getInstance().get(name));
                     }
                     else {
-                        throw new CounterNotFoundException("Não foi possível obter o valor do contador '" + name + "' porque ele não foi definido.");
+                        throw new CounterNotFoundException(
+                                String.format(
+                                        "Não foi possível obter o valor do contador '%s' porque este não foi definido.",
+                                        name
+                                )
+                        );
                     }
                 }
             
@@ -706,8 +906,18 @@ public class MacroUtils {
                 
                 // número inválido de parâmetros
                 if (parameters.size() != 1) {
-                    logger.error("O número de parâmetros da primitiva {} não confere (a primitiva requer 1 parâmetro). Foi encontrado: {}", primitive, parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva " + primitive + " não confere. (a primitiva requer 1 parâmetro). Foi encontrado: " + parameters);
+                    logger.error(
+                            "O número de parâmetros da primitiva '{}' não confere (a primitiva requer um parâmetro). Foi encontrado: {}",
+                            primitive,
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva '%s' não confere. (a primitiva requer um parâmetro). Foi encontrado: %s",
+                                    primitive,
+                                    parameters
+                            )
+                    );
                 }
                 else {
                     
@@ -722,7 +932,9 @@ public class MacroUtils {
                         value = Integer.parseInt(parameter.trim());
                     }
                     catch (NumberFormatException exception) {
-                        throw new NumberFormatException("Não foi possível converter o valor do parâmetro para uma representação inteira.");
+                        throw new NumberFormatException(
+                                "Não foi possível converter o valor do parâmetro para uma representação inteira."
+                        );
                     }
                     
                     // realiza a operação de acordo com o tipo de primitiva
@@ -746,8 +958,17 @@ public class MacroUtils {
                 
                 // número inválido de parâmetros
                 if (parameters.size() != 1) {
-                    logger.error("O número de parâmetros da primitiva {} não confere (a primitiva requer 1 parâmetro). Foi encontrado: {}", primitive, parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva " + primitive + " não confere. (a primitiva requer 1 parâmetro). Foi encontrado: " + parameters);
+                    logger.error(
+                            "O número de parâmetros da primitiva '{}' não confere (a primitiva requer um parâmetro). Foi encontrado: {}",
+                            primitive,
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva '%s' não confere. (a primitiva requer um parâmetro). Foi encontrado: %s",
+                                    primitive,
+                                    parameters
+                            ));
                 }
                 else {
                  
@@ -777,7 +998,12 @@ public class MacroUtils {
                         
                     }
                     else {
-                        throw new CounterNotFoundException("Não foi possível definir o valor do contador '" + name + "' porque ele não foi definido.");
+                        throw new CounterNotFoundException(
+                                String.format(
+                                        "Não foi possível definir o valor do contador '%s' porque este não foi definido.",
+                                        name
+                                )
+                        );
                     }
                     
                 }
@@ -790,8 +1016,17 @@ public class MacroUtils {
                 
                 // número inválido de parâmetros
                 if (parameters.size() != 2) {
-                    logger.error("O número de parâmetros da primitiva {} não confere (a primitiva requer 2 parâmetros). Foi encontrado: {}", primitive, parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva " + primitive + " não confere. (a primitiva requer 2 parâmetros). Foi encontrado: " + parameters);
+                    logger.error("O número de parâmetros da primitiva '{}' não confere (a primitiva requer dois parâmetros). Foi encontrado: {}",
+                            primitive,
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva '%s' não confere. (a primitiva requer dois parâmetros). Foi encontrado: %s",
+                                    primitive,
+                                    parameters
+                            )
+                    );
                 }
                 else {
                     
@@ -813,7 +1048,9 @@ public class MacroUtils {
                         value2 = Integer.parseInt(parameter2.trim());
                     }
                     catch (NumberFormatException exception) {
-                        throw new NumberFormatException("Não foi possível converter o valor do parâmetro para uma representação inteira.");
+                        throw new NumberFormatException(
+                                "Não foi possível converter o valor do parâmetro para uma representação inteira."
+                        );
                     }
                     
                     // verifica qual operação realizar e realiza o teste
@@ -838,8 +1075,14 @@ public class MacroUtils {
                 
                 // número inválido de parâmetros
                 if (parameters.size() != 1) {
-                    logger.error("O número de parâmetros da primitiva is zero não confere (a primitiva requer 1 parâmetro). Foi encontrado: {}", parameters);
-                    throw new ArgumentNumberMismatchException("O número de parâmetros da primitiva is zero não confere. (a primitiva requer 1 parâmetro). Foi encontrado: " + parameters);
+                    logger.error(
+                            "O número de parâmetros da primitiva 'is zero' não confere (a primitiva requer um parâmetro). Foi encontrado: {}", parameters);
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva 'is zero' não confere. (a primitiva requer um parâmetro). Foi encontrado: %s",
+                                    parameters
+                            )
+                    );
                 }
                 else {
                     
@@ -854,7 +1097,9 @@ public class MacroUtils {
                         value = Integer.parseInt(parameter.trim());
                     }
                     catch (NumberFormatException exception) {
-                        throw new NumberFormatException("Não foi possível converter o valor do parâmetro para uma representação inteira.");
+                        throw new NumberFormatException(
+                                "Não foi possível converter o valor do parâmetro para uma representação inteira."
+                        );
                     }
                     
                     // retorna o resultado da comparação com zero
@@ -863,6 +1108,78 @@ public class MacroUtils {
                 }
             
                 break;
+                
+            case UPLOADTOGOOGLEDRIVE:
+                
+                // número de parâmetros é inválido
+                if (parameters.size() != 2) {
+                    logger.error(
+                            "O número de parâmetros da primitiva 'upload to google drive' não confere (a primitiva requer dois parâmetros). Foi encontrado: {}",
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva 'upload to google drive' não confere. (a primitiva requer dois parâmetros). Foi encontrado: %s",
+                                    parameters
+                            )
+                    );
+                }
+                else {
+                    
+                    // cria um novo escopo e expande o primeiro valor
+                    ScopeController.getInstance().createNewScope();
+                    Expander expander = new Expander();
+                    String name = expander.parse(parameters.get(1));
+                    
+                    // cria um novo escopo e expande o segundo valor
+                    ScopeController.getInstance().createNewScope();
+                    expander = new Expander();
+                    String content = expander.parse(parameters.get(2));
+                    
+                    // faz o upload para o Google Drive
+                    GoogleDriveUtils.insert(name, content);
+                    
+                }
+            
+                break;
+                
+            case GETFROMGOOGLEDRIVE:
+            case GETURL:
+                
+                // número inválido de parâmetros
+                if (parameters.size() != 1) {
+                    logger.error(
+                            "O número de parâmetros da primitiva '{}' não confere (a primitiva requer um parâmetro). Foi encontrado: {}",
+                            primitive,
+                            parameters
+                    );
+                    throw new ArgumentNumberMismatchException(
+                            String.format(
+                                    "O número de parâmetros da primitiva '%s' não confere. (a primitiva requer um parâmetro). Foi encontrado: %s",
+                                    primitive,
+                                    parameters
+                            )
+                    );
+                }
+                else {
+                    
+                    // cria um novo escopo e expande o parâmetro
+                    ScopeController.getInstance().createNewScope();
+                    Expander expander = new Expander();
+                    String parameter = expander.parse(parameters.get(1));
+                    
+                    // verifica qual operação deve ser executada
+                    if (primitive == Primitive.GETFROMGOOGLEDRIVE) {
+                        output = GoogleDriveUtils.get(parameter);
+                    }
+                    else {
+                        output = CommonUtils.get(parameter);
+                    }
+                    
+                }
+                
+                break;
+                
 
         }
 
@@ -885,7 +1202,10 @@ public class MacroUtils {
             throws MacroDefinitionException, MalformedMacroException,
             MalformedArgumentException {
 
-        logger.info("Obtendo definição da nova macro: {}", input);
+        logger.info(
+                "Obtendo definição da nova macro: {}",
+                input
+        );
         
         // elementos do autômato adaptativo, com o indicador do estado corrente,
         // o símbolo a ser consumido e o cursor que percorre a cadeia de entrada
@@ -923,7 +1243,10 @@ public class MacroUtils {
                     // macro
                     if (symbol == '\\') {
                     
-                        logger.info("Início da macro a ser definida (posição {}).", cursor);
+                        logger.info(
+                                "Início da macro a ser definida (posição {}).",
+                                cursor
+                        );
                         
                         // novo estado
                         state = 2;
@@ -935,7 +1258,10 @@ public class MacroUtils {
                             
                             // condição de erro, lançar exceção
                             throw new MalformedMacroException(
-                                    String.format("Era esperado o símbolo de início de macro na posição %d.", cursor)
+                                    String.format(
+                                            "Era esperado o símbolo de início de macro na posição %d.",
+                                            cursor
+                                    )
                             );
                         }
                         
@@ -947,11 +1273,20 @@ public class MacroUtils {
                     
                     if (symbol == '(') {
                         throw new MalformedMacroException(
-                                String.format("Encontrei '(' na posição %d. Ele não pode ser delimitador pois indica o início da lista de parâmetros.", cursor)
+                                String.format(
+                                        "Encontrei '(' na posição %d. Ele não pode ser delimitador pois indica o início da lista de parâmetros.",
+                                        cursor
+                                )
                         );
                     }
 
-                    logger.info("Encontrei o símbolo '{}' na posição {}. O delimitador da macro é \\\\{} ... {}\\.", symbol, cursor, symbol, symbol);
+                    logger.info(
+                            "Encontrei o símbolo '{}' na posição {}. O delimitador da macro é \\\\{} ... {}\\.",
+                            symbol,
+                            cursor,
+                            symbol,
+                            symbol
+                    );
                     
                     // o próximo símbolo é o delimitador do nome da macro
                     delimiter1 = symbol;
@@ -972,7 +1307,10 @@ public class MacroUtils {
                         else {
                             
                             // o símbolo é uma abertura de parênteses
-                            logger.info("Encontrei um início da lista de parâmetros da macro a ser definida, na posição {}.", cursor);
+                            logger.info(
+                                    "Encontrei um início da lista de parâmetros da macro a ser definida, na posição {}.",
+                                    cursor
+                            );
                             
                             // avança para o novo estado
                             state = 4;
@@ -981,7 +1319,11 @@ public class MacroUtils {
                     else {
                         
                         // o símbolo é o delimitador da macro
-                        logger.info("Encontrei o delimitador '{}' da macro a ser definida, na posição {}.", delimiter1, cursor);
+                        logger.info(
+                                "Encontrei o delimitador '{}' da macro a ser definida, na posição {}.",
+                                delimiter1,
+                                cursor
+                        );
                         
                         // novo estado do autômato adaptativo
                         state = 10;
@@ -1005,7 +1347,10 @@ public class MacroUtils {
                         
                             // erro sintático, lançar exceção
                             throw new MalformedArgumentException(
-                                    String.format("Era esperado um início de macro simples na posição %d para definição do argumento.", cursor)
+                                    String.format(
+                                            "Era esperado um início de macro simples na posição %d para definição do argumento.",
+                                            cursor
+                                    )
                             );
                         
                         }
@@ -1016,7 +1361,13 @@ public class MacroUtils {
 
                 case 5:
 
-                    logger.info("Encontrei o símbolo '{}'. O delimitador do parâmetro {} é \\\\{} ... {}\\.", symbol, (total + 1), symbol, symbol);
+                    logger.info(
+                            "Encontrei o símbolo '{}'. O delimitador do parâmetro {} é \\\\{} ... {}\\.",
+                            symbol,
+                            (total + 1),
+                            symbol,
+                            symbol
+                    );
                     
                     // define o novo símbolo e reinicializa a variável que
                     // conterá o valor do parâmetro
@@ -1036,7 +1387,11 @@ public class MacroUtils {
                         parameter = parameter + symbol;
                     } else {
                         
-                        logger.info("Encontrei o delimitador '{}' na posição {}.", symbol, cursor);
+                        logger.info(
+                                "Encontrei o delimitador '{}' na posição {}.",
+                                symbol,
+                                cursor
+                        );
                         
                         // o delimitador do parâmetro corrente foi encontrado,
                         // avançar para o novo estado
@@ -1051,7 +1406,10 @@ public class MacroUtils {
                     // fechamento do parâmetro.
                     if (symbol == '\\') {
                         
-                        logger.info("Encontrei o parâmetro '{}' da nova macro.", parameter);
+                        logger.info(
+                                "Encontrei o parâmetro '{}' da nova macro.",
+                                parameter
+                        );
                         
                         // incrementa o número de parâmetros, e adiciona o nome
                         // no mapa de parâmetros, indexado por sua posição na
@@ -1066,7 +1424,10 @@ public class MacroUtils {
                     else {
                         //error = true;
                         throw new MalformedArgumentException(
-                                String.format("Era esperado um delimitador de fechamento do parâmetro na posição %d.", cursor)
+                                String.format(
+                                        "Era esperado um delimitador de fechamento do parâmetro na posição %d.",
+                                        cursor
+                                )
                         );
                     }
                     
@@ -1081,7 +1442,10 @@ public class MacroUtils {
                     // o símbolo é um separador de parâmetros
                     if (symbol == ',') {
                         
-                        logger.info("Encontrei um separador de parâmetros ',' na posição {}.", cursor);
+                        logger.info(
+                                "Encontrei um separador de parâmetros ',' na posição {}.",
+                                cursor
+                        );
                         
                         // novo estado de destino, volta para a identificação do
                         // próximo parâmetro
@@ -1092,7 +1456,10 @@ public class MacroUtils {
                         // o símbolo é um fechamento da lista de parâmetros
                         if (symbol == ')') {
                             
-                            logger.info("Encontrei o símbolo de fechamento da lista de parâmetros na posição {}.", cursor);
+                            logger.info(
+                                    "Encontrei o símbolo de fechamento da lista de parâmetros na posição {}.",
+                                    cursor
+                            );
                             
                             // novo estado de destino, voltando para a análise
                             // do fechamento da definição da macro
@@ -1105,7 +1472,10 @@ public class MacroUtils {
                             
                                 // erro sintático, lançar exceção
                                 throw new MalformedMacroException(
-                                        String.format("Era esperado o término da definição dos parâmetros da macro ou o separador de parâmetros na posição %d.", cursor)
+                                        String.format(
+                                                "Era esperado o término da definição dos parâmetros da macro ou o separador de parâmetros na posição %d.",
+                                                cursor
+                                        )
                                 );
                                 
                             }
@@ -1119,7 +1489,11 @@ public class MacroUtils {
                     // espera-se o delimitador de término da macro
                     if (symbol == delimiter1) {
                         
-                        logger.info("Encontrei o delimitador de término '{}' da macro na posição {}.", delimiter1, cursor);
+                        logger.info(
+                                "Encontrei o delimitador de término '{}' da macro na posição {}.",
+                                delimiter1,
+                                cursor
+                        );
                         
                         // novo estado de destino
                         state = 10;    
@@ -1131,7 +1505,11 @@ public class MacroUtils {
                         
                             // erro sintático, lançar exceção
                             throw new MalformedMacroException(
-                                    String.format("Era esperado o delimitador de término '%c' da nova macro na posição %d.", delimiter1, cursor)
+                                    String.format(
+                                            "Era esperado o delimitador de término '%c' da nova macro na posição %d.",
+                                            delimiter1,
+                                            cursor
+                                    )
                             );
                         
                         }
@@ -1146,7 +1524,10 @@ public class MacroUtils {
                     // atingido
                     if (symbol == '\\') {
                         
-                        logger.info("Encontrei o símbolo de fechamento da nova macro na posição {}.", cursor);
+                        logger.info(
+                                "Encontrei o símbolo de fechamento da nova macro na posição {}.",
+                                cursor
+                        );
                         
                         // novo estado de destino
                         state = 11;
@@ -1155,7 +1536,10 @@ public class MacroUtils {
                         
                         // erro sintático, lançar exceção
                         throw new MalformedMacroException(
-                                String.format("Era esperado o símbolo de fechamento da nova macro na posição %d.", cursor)
+                                String.format(
+                                        "Era esperado o símbolo de fechamento da nova macro na posição %d.",
+                                        cursor
+                                )
                         );
                     }
                     
@@ -1166,7 +1550,10 @@ public class MacroUtils {
                     // espera-se o símbolo de atribuição
                     if (symbol == '=') {
                         
-                        logger.info("Encontrei o símbolo de atribuição na posição {}.", cursor);
+                        logger.info(
+                                "Encontrei o símbolo de atribuição na posição {}.",
+                                cursor
+                        );
                         
                         // novo estado de destino
                         state = 12;
@@ -1178,7 +1565,10 @@ public class MacroUtils {
                         
                             // erro sintático, lançar exceção
                             throw new MacroDefinitionException(
-                                    String.format("Era esperado o símbolo de atribuição à nova macro na posição %d.", cursor)
+                                    String.format(
+                                            "Era esperado o símbolo de atribuição à nova macro na posição %d.",
+                                            cursor
+                                    )
                             );
                             
                         }
@@ -1192,7 +1582,10 @@ public class MacroUtils {
                     // da definição do corpo da nova macro
                     if (symbol == '\\') {
                         
-                        logger.info("Encontrei o símbolo de início da definição do corpo da nova macro na posição {}.", cursor);
+                        logger.info(
+                                "Encontrei o símbolo de início da definição do corpo da nova macro na posição {}.",
+                                cursor
+                        );
                         
                         // novo estado de destino
                         state = 13;
@@ -1205,7 +1598,10 @@ public class MacroUtils {
                         
                             // erro sintático, lançar exceção
                             throw new MacroDefinitionException(
-                                    String.format("Era esperado o símbolo de início da definição do corpo da nova macro na posição %d.", cursor)
+                                    String.format(
+                                            "Era esperado o símbolo de início da definição do corpo da nova macro na posição %d.",
+                                            cursor
+                                    )
                             );
                             
                         }
@@ -1215,7 +1611,13 @@ public class MacroUtils {
 
                 case 13:
 
-                    logger.info("Encontrei o símbolo '{}' na posição {}. O delimitador do corpo da nova macro é \\\\{} ... {}\\.", symbol, cursor, symbol, symbol);
+                    logger.info(
+                            "Encontrei o símbolo '{}' na posição {}. O delimitador do corpo da nova macro é \\\\{} ... {}\\.",
+                            symbol,
+                            cursor,
+                            symbol,
+                            symbol
+                    );
                     
                     // neste estado, obtém-se o delimitador da definição do
                     // corpo da nova macro
@@ -1236,7 +1638,11 @@ public class MacroUtils {
                     }
                     else {
                         
-                        logger.info("Encontrei o delimitador '{}' do corpo da nova macro na posição {}.", delimiter1, cursor);
+                        logger.info(
+                                "Encontrei o delimitador '{}' do corpo da nova macro na posição {}.",
+                                delimiter1,
+                                cursor
+                        );
                         
                         // novo estado de destino
                         state = 15;
@@ -1249,7 +1655,10 @@ public class MacroUtils {
                     // nova macro
                     if (symbol == '\\') {
                         
-                        logger.info("Encontrei o símbolo de término do corpo da definição da nova macro na posição {}.", cursor);
+                        logger.info(
+                                "Encontrei o símbolo de término do corpo da definição da nova macro na posição {}.",
+                                cursor
+                        );
                         
                         // novo estado
                         state = 16;
@@ -1258,7 +1667,10 @@ public class MacroUtils {
                         
                         // erro sintático, lançar exceção
                         throw new MacroDefinitionException(
-                                String.format("Era esperado o término do delimitador do corpo da definição da nova macro na posição %d.", cursor)
+                                String.format(
+                                        "Era esperado o término do delimitador do corpo da definição da nova macro na posição %d.",
+                                        cursor
+                                )
                         );
                     }
                     
@@ -1272,7 +1684,10 @@ public class MacroUtils {
                         
                         // erro sintático
                         throw new MacroDefinitionException(
-                                String.format("Existe um símbolo inválido após a definição da macro, na posição %d.", cursor)
+                                String.format(
+                                        "Existe um símbolo inválido após a definição da macro, na posição %d.",
+                                        cursor
+                                )
                         );
                     }
                     
@@ -1292,15 +1707,21 @@ public class MacroUtils {
         if (state != 16) {
         
             // erro sintático, provavelmente
-            throw new MacroDefinitionException("Houve um erro na definição da nova macro, o reconhecimento encerrou-se prematuramente.");
+            throw new MacroDefinitionException(
+                    "Houve um erro na definição da nova macro, o reconhecimento encerrou-se prematuramente."
+            );
         }
         else {
             
+            // faz a limpeza no nome da macro
             name = sanitize(name);
             
             // define a nova macro e a retorna
             Macro macro = new Macro(name, parameters, body);
-            logger.info("A nova macro foi definida: {}", macro);
+            logger.info(
+                    "A nova macro foi definida: {}",
+                    macro
+            );
             return macro;
         }
     }
@@ -1340,7 +1761,9 @@ public class MacroUtils {
             else {
                 
                 // o valor informado é inválido, lançar exceção
-                throw new InvalidConditionValueException("Encontrei um valor inválido para a condição a ser testada.");
+                throw new InvalidConditionValueException(
+                        "Encontrei um valor inválido para a condição a ser testada."
+                );
             }
         }
     }
@@ -1354,7 +1777,9 @@ public class MacroUtils {
     public static String sanitize(String name) throws MalformedMacroException {
         String result = name.replaceAll("\\s+", " ").trim();
         if (result.isEmpty()) {
-            throw new MalformedMacroException("O nome da macro não pode ser vazio.");
+            throw new MalformedMacroException(
+                    "O nome da macro não pode ser vazio."
+            );
         }
         else {
             return result;

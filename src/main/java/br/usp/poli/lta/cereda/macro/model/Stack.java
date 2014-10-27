@@ -102,7 +102,10 @@ public class Stack<TYPE> {
      */
     @Override
     public String toString() {
-        return "Pilha: { " + stack + " }";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Pilha: {");
+        sb.append(stack).append(" }");
+        return sb.toString();
     }
 
 }

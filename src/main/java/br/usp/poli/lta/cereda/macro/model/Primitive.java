@@ -50,6 +50,9 @@ public enum Primitive {
     ISZERO,
     ISGREATERTHAN,
     ISLESSTHAN,
-    ISEQUAL
+    ISEQUAL,
+    UPLOADTOGOOGLEDRIVE,
+    GETFROMGOOGLEDRIVE,
+    GETURL
     
 }

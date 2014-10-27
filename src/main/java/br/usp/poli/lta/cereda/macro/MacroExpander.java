@@ -31,6 +31,7 @@ import br.usp.poli.lta.cereda.macro.model.exceptions.MacroNotFoundException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.MalformedArgumentException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.MalformedMacroException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.PotentialInfiniteRecursionException;
+import br.usp.poli.lta.cereda.macro.model.exceptions.TextRetrievalException;
 import br.usp.poli.lta.cereda.macro.util.DisplayUtils;
 import br.usp.poli.lta.cereda.macro.util.ScopeController;
 import org.apache.logging.log4j.LogManager;
@@ -75,6 +76,7 @@ public class MacroExpander {
      * global de contadores.
      * @throws CounterNotFoundException O contador informado não existe no
      * gerenciador global de contadores.
+     * @throws TextRetrievalException Ocorreu um erro na recuperação do texto.
      */
     public static String parse(String text)
             throws PotentialInfiniteRecursionException,
@@ -82,7 +84,8 @@ public class MacroExpander {
             InvalidIntegerRangeException, MacroDefinitionException,
             DuplicateMacroException, MacroNotFoundException,
             MalformedMacroException, InvalidConditionValueException,
-            DuplicateCounterException, CounterNotFoundException {
+            DuplicateCounterException, CounterNotFoundException,
+            TextRetrievalException {
         
         // inicia a configuração de layout da interface gráfica
         DisplayUtils.init();

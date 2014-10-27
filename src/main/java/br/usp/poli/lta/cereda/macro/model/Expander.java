@@ -30,6 +30,7 @@ import br.usp.poli.lta.cereda.macro.model.exceptions.MacroNotFoundException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.MalformedArgumentException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.MalformedMacroException;
 import br.usp.poli.lta.cereda.macro.model.exceptions.PotentialInfiniteRecursionException;
+import br.usp.poli.lta.cereda.macro.model.exceptions.TextRetrievalException;
 import br.usp.poli.lta.cereda.macro.util.MacroUtils;
 import br.usp.poli.lta.cereda.macro.util.ScopeController;
 import java.util.ArrayList;
@@ -77,6 +78,7 @@ public class Expander {
      * global de contadores.
      * @throws CounterNotFoundException O contador informado não existe no
      * gerenciador global de contadores.
+     * @throws TextRetrievalException Ocorreu um erro na recuperação do texto.
      */
     public String parse(String input)
             throws PotentialInfiniteRecursionException,
@@ -84,7 +86,8 @@ public class Expander {
             InvalidIntegerRangeException, MacroDefinitionException,
             DuplicateMacroException, MacroNotFoundException,
             MalformedMacroException, InvalidConditionValueException,
-            DuplicateCounterException, CounterNotFoundException {
+            DuplicateCounterException, CounterNotFoundException, 
+            TextRetrievalException {
 
         // ativa o método utilitário que contabiliza a entrada em um novo escopo
         // de expansão; esse método é utilizado para evitar uma situação em que
@@ -144,7 +147,10 @@ public class Expander {
                     }
                     else {
                         
-                        logger.info("Encontrei um início de macro com o cursor na posição {}.", cursor);
+                        logger.info(
+                                "Encontrei um início de macro com o cursor na posição {}.",
+                                cursor
+                        );
 
                         // uma macro em potencial, as variáveis auxiliares são
                         // devidamente reinicializadas
@@ -162,11 +168,20 @@ public class Expander {
                     
                     if (symbol == '(') {
                         throw new MalformedMacroException(
-                                String.format("Encontrei '(' na posição %d. Ele não pode ser delimitador pois indica o início da lista de parâmetros.", cursor)
+                                String.format(
+                                        "Encontrei '(' na posição %d. Ele não pode ser delimitador pois indica o início da lista de parâmetros.",
+                                        cursor
+                                )
                         );
                     }
 
-                    logger.info("Encontrei o símbolo '{}' na posição {}. O delimitador da macro é \\\\{} ... {}\\.", symbol, cursor, symbol, symbol);
+                    logger.info(
+                            "Encontrei o símbolo '{}' na posição {}. O delimitador da macro é \\\\{} ... {}\\.",
+                            symbol,
+                            cursor,
+                            symbol,
+                            symbol
+                    );
 
                     // neste estado, o símbolo corrente na cadeia de entrada
                     // determina o delimitador da macro corrente; no autômato
@@ -191,7 +206,10 @@ public class Expander {
                             macro = macro + symbol;
                         }
                         else {
-                            logger.info("Encontrei '(' na posição {}, indicando que a macro em questão é paramétrica.", cursor);
+                            logger.info(
+                                    "Encontrei '(' na posição {}, indicando que a macro em questão é paramétrica.",
+                                    cursor
+                            );
                             
                             // o novo estado de destino do autômato, levando o
                             // reconhecimento para o tratamento de parâmetros da
@@ -200,7 +218,11 @@ public class Expander {
                         }
                     }
                     else {
-                        logger.info("Encontrei o início do delimitador de fechamento '{}' da macro corrente na posição {}.", delimiter1, cursor);
+                        logger.info(
+                                "Encontrei o início do delimitador de fechamento '{}' da macro corrente na posição {}.",
+                                delimiter1,
+                                cursor
+                        );
                         
                         // novo estado de destino, tratando do fechamento da
                         // macro corrente
@@ -215,8 +237,14 @@ public class Expander {
                     // de macros; qualquer outro símbolo gera um erro sintático
                     if (symbol == '\\') {
 
-                        logger.info("Encontrei o símbolo de fechamento de macro na posição {}, resultando na macro '{}' com os parâmetros '{}'.", cursor, macro, parameters);
+                        logger.info(
+                                "Encontrei o símbolo de fechamento de macro na posição {}, resultando na macro '{}' com os parâmetros '{}'.",
+                                cursor,
+                                macro,
+                                parameters
+                        );
                         
+                        // faz a limpeza no nome da macro
                         macro = MacroUtils.sanitize(macro);
                         
                         // é feita uma análise para determinar se a macro
@@ -235,7 +263,10 @@ public class Expander {
                         }
                         else {
 
-                            logger.info("Estou procurando a macro '{}' nos escopos disponíveis.", macro);
+                            logger.info(
+                                    "Estou procurando a macro '{}' nos escopos disponíveis.",
+                                    macro
+                            );
                             
                             // faz a procura da macro, de acordo com o nome e o
                             // número de parâmetros; observe que a procura
@@ -253,7 +284,11 @@ public class Expander {
                             List<Macro> macros = new ArrayList<>();
                             for (int i = 1; i <= parameters.size(); i++) {
                                 
-                                logger.info("Estou expandindo o parâmetro '{}' da macro '{}' (os parâmetros transformam-se em macros simples no escopo da macro paramétrica).", execute.getParameters().get(i), macro);
+                                logger.info(
+                                        "Estou expandindo o parâmetro '{}' da macro '{}' (os parâmetros transformam-se em macros simples no escopo da macro paramétrica).",
+                                        execute.getParameters().get(i),
+                                        macro
+                                );
                                 ScopeController.getInstance().createNewScope();
                                 Expander expander = new Expander();
                                 macros.add(
@@ -268,7 +303,11 @@ public class Expander {
                             // já expandidos e transformados em macros simples,
                             // serão adicionados ao escopo corrente
                             if (!parameters.isEmpty()) {
-                                logger.info("Os parâmetros '{}' foram transformados em macros simples para a expansão do corpo da macro {}. Vou adicioná-los ao escopo corrente.", parameters, macro);
+                                logger.info(
+                                        "Os parâmetros '{}' foram transformados em macros simples para a expansão do corpo da macro {}. Vou adicioná-los ao escopo corrente.",
+                                        parameters,
+                                        macro
+                                );
                             }
                             
                             // cria-se um novo escopo, adicionam-se as macros
@@ -294,7 +333,10 @@ public class Expander {
                         // situação de erro, o símbolo de fechamento de macro
                         // não foi encontrado; é necessário abortar a execução
                         throw new MalformedMacroException(
-                                String.format("Encontrei uma macro mal formada na posição %d. O símbolo de fechamento era esperado.", cursor)
+                                String.format(
+                                        "Encontrei uma macro mal formada na posição %d. O símbolo de fechamento era esperado.",
+                                        cursor
+                                )
                         );
                     }
 
@@ -310,7 +352,10 @@ public class Expander {
                     // de um parâmetro
                     if (symbol == '\\') {
 
-                        logger.info("Encontrei o símbolo de abertura de um parâmetro na posição {}.", cursor);
+                        logger.info(
+                                "Encontrei o símbolo de abertura de um parâmetro na posição {}.",
+                                cursor
+                        );
                         
                         // novo estado de destino do autômato adaptativo, que
                         // determina o contexto do aninhamento sintático
@@ -324,7 +369,12 @@ public class Expander {
                             
                             // o símbolo de abertura de um parâmetro não foi
                             // encontrado, lançar exceção
-                            throw new MalformedArgumentException(String.format("Encontrei um argumento mal formado (símbolo de abertura esperado) na posição %d.", cursor));
+                            throw new MalformedArgumentException(
+                                    String.format(
+                                            "Encontrei um argumento mal formado (símbolo de abertura esperado) na posição %d.",
+                                            cursor
+                                    )
+                            );
                         }
                     }
 
@@ -334,7 +384,14 @@ public class Expander {
 
                     // neste estado, é definido o delimitador de parâmetros da
                     // macro corrente
-                    logger.info("Encontrei o símbolo '{}' na posição {}. O delimitador do parâmetro {} será \\\\{} ... {}\\.", symbol, cursor, (total + 1), symbol, symbol);
+                    logger.info(
+                            "Encontrei o símbolo '{}' na posição {}. O delimitador do parâmetro {} será \\\\{} ... {}\\.",
+                            symbol,
+                            cursor,
+                            (total + 1),
+                            symbol,
+                            symbol
+                    );
                     delimiter2 = symbol;
                     
                     // reinicializa a variável para receber, ao longo do
@@ -357,7 +414,12 @@ public class Expander {
                     else {
                         
                         // o delimitador do parâmetro foi encontrado
-                        logger.info("Encontrei o início do delimitador de fechamento '{}' do parâmetro {} na posição {}.", symbol, (total + 1), cursor);
+                        logger.info(
+                                "Encontrei o início do delimitador de fechamento '{}' do parâmetro {} na posição {}.",
+                                symbol,
+                                (total + 1),
+                                cursor
+                        );
                         
                         // novo estado do autômato adaptativo
                         state = 8;
@@ -371,7 +433,10 @@ public class Expander {
                     // do parâmetro corrente
                     if (symbol == '\\') {
                         
-                        logger.info("O parâmetro '{}' foi encontrado.", parameter);
+                        logger.info(
+                                "O parâmetro '{}' foi encontrado.",
+                                parameter
+                        );
                         
                         // o parâmetro foi determinado corretamente; o número de
                         // parâmetros é incrementado e o parâmetro é adicionado
@@ -390,7 +455,10 @@ public class Expander {
                         
                         // o argumento possui erro sintático, lançar exceção
                         throw new MalformedArgumentException(
-                                String.format("Encontrei um argumento mal formado (término esperado) na posição %d.", cursor)
+                                String.format(
+                                        "Encontrei um argumento mal formado (término esperado) na posição %d.",
+                                        cursor
+                                )
                         );
                     }
 
@@ -405,7 +473,10 @@ public class Expander {
                     // o separador de parâmetros foi encontrado
                     if (symbol == ',') {
                         
-                        logger.info("Encontrei o separador de parâmetros ',' na posição {}.", cursor);
+                        logger.info(
+                                "Encontrei o separador de parâmetros ',' na posição {}.",
+                                cursor
+                        );
                         
                         // novo estado de destino, retornando a análise para o
                         // estado em que espera-se um novo parâmetro
@@ -417,7 +488,10 @@ public class Expander {
                         // o fechamento da lista de parãmetros foi encontrado
                         if (symbol == ')') {
                             
-                            logger.info("Encontrei o término da lista de parâmetros (fechamento de parênteses) na posição {}.", cursor);
+                            logger.info(
+                                    "Encontrei o término da lista de parâmetros (fechamento de parênteses) na posição {}.",
+                                    cursor
+                            );
                             
                             // novo estado de destino do autômato, retornando
                             // a análise o estado em que espera-se o delimitador
@@ -431,7 +505,10 @@ public class Expander {
                             
                                 // erro sintático, lançar exceção
                                 throw new MalformedMacroException(
-                                        String.format("Era esperado o término da definição dos parâmetros da macro ou o separador de parâmetros na posição %d.", cursor)
+                                        String.format(
+                                                "Era esperado o término da definição dos parâmetros da macro ou o separador de parâmetros na posição %d.",
+                                                cursor
+                                        )
                                 );
                                 
                             }
@@ -447,7 +524,11 @@ public class Expander {
                     // de fechamento da macro paramétrica
                     if (symbol == delimiter1) {
                         
-                        logger.info("Encontrei o início do delimitador de fechamento '{}' da macro paramétrica na posição {}.", symbol, cursor);
+                        logger.info(
+                                "Encontrei o início do delimitador de fechamento '{}' da macro paramétrica na posição {}.",
+                                symbol,
+                                cursor
+                        );
                         
                         // novo estado de destino, retornando para a situação
                         // na qual espera-se o símbolo de fechamento de macros
@@ -459,7 +540,11 @@ public class Expander {
                         if (!MacroUtils.ignore(symbol)) {
                             // ocorreu um erro sintático, a macro é mal formada
                             throw new MalformedMacroException(
-                                    String.format("Encontrei uma macro mal formada (delimitador de fechamento '%c' da macro paramétrica era esperado) na posição %d.", delimiter1, cursor)
+                                    String.format(
+                                            "Encontrei uma macro mal formada (delimitador de fechamento '%c' da macro paramétrica era esperado) na posição %d.",
+                                            delimiter1,
+                                            cursor
+                                    )
                             );
                         }
                     }
@@ -481,7 +566,9 @@ public class Expander {
         // aceitação; caso contrário, a análise do texto encerrou-se durante o
         // processamento de uma macro
         if (state != 1) {
-            throw new MalformedMacroException("A análise do texto encerrou prematuramente durante o processamento de uma macro.");
+            throw new MalformedMacroException(
+                    "A análise do texto encerrou prematuramente durante o processamento de uma macro."
+            );
         }
 
         // a expansão foi concluída com sucesso; libera-se o escopo corrente e

@@ -46,7 +46,10 @@ public class DisplayUtils {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         }
         catch (Exception exception) {
-            logger.error(exception.getMessage());
+            logger.error(
+                    "Ocorreu um erro: {}",
+                    exception.getMessage()
+            );
         }
     }
     
