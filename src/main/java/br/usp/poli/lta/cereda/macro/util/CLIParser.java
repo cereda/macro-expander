@@ -48,6 +48,8 @@ public class CLIParser {
 
     // vetor de argumentos de linha de comando
     private final String[] arguments;
+    
+    private boolean editor = false;
 
     /**
      * Construtor.
@@ -68,7 +70,7 @@ public class CLIParser {
         // opção de entrada
         Option input = OptionBuilder.withLongOpt("input").
                 hasArgs().withArgName("lista de arquivos").
-                withDescription("arquivos de entrada").isRequired().
+                withDescription("arquivos de entrada").
                 create("i");
         
         // opção de saída
@@ -76,15 +78,32 @@ public class CLIParser {
                 hasArg().withArgName("arquivo").
                 withDescription("arquivo de saída").create("o");
         
+        // opção do editor embutido
+        Option ui = OptionBuilder.withLongOpt("editor").
+                withDescription("editor gráfico").create("e");
+        
         Options options = new Options();
         options.addOption(input);
         options.addOption(output);
+        options.addOption(ui);
         
         try {
             
             // parsing dos argumentos
             Parser parser = new BasicParser();
             CommandLine line = parser.parse(options, arguments);
+            
+            // verifica se é uma chamada ao editor e retorna em caso positivo
+            if (line.hasOption("e")) {
+                editor = true;
+                return null;
+            }
+            
+            // se não é uma chamada ao editor de macros, é necessário verificar
+            // se existe um arquivo de entrada
+            if (!line.hasOption("i")) {
+                throw new ParseException("");
+            }
             
             // existem argumentos restantes, o que representa situação de erro
             if (!line.getArgList().isEmpty()) {
@@ -133,7 +152,8 @@ public class CLIParser {
             // imprime a ajuda
             HelpFormatter help = new HelpFormatter();
             help.printHelp(
-                    "expander --input <lista de arquivos> [ --output <arquivo> ]",
+                    "expander ( --editor | --input <lista de arquivos>"
+                            + " [ --output <arquivo> ] )",
                     options
             );
         }
@@ -143,5 +163,13 @@ public class CLIParser {
         return null;
         
     }
-    
+
+    /**
+     * Verifica se é uma chamada ao editor embutido.
+     * @return Valor lógico que indica se é uma chamada ao editor de macros.
+     */
+    public boolean isEditor() {
+        return editor;
+    }
+
 }

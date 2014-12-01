@@ -20,9 +20,12 @@
 package br.usp.poli.lta.cereda.macro;
 
 import br.usp.poli.lta.cereda.macro.model.Pair;
+import br.usp.poli.lta.cereda.macro.ui.Editor;
 import br.usp.poli.lta.cereda.macro.util.CLIParser;
+import br.usp.poli.lta.cereda.macro.util.DisplayUtils;
 import java.io.File;
 import java.nio.charset.Charset;
+import javax.swing.SwingUtilities;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -92,6 +95,23 @@ public class Application {
                     System.out.println(output);
                 }
                 
+            }
+            else {
+                
+                // verifica se a execução corresponde a uma chamada ao editor
+                // embutido de macros
+                if (parser.isEditor()) {
+                    
+                    // cria o editor e exibe
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            DisplayUtils.init();
+                            Editor editor = new Editor();
+                            editor.setVisible(true);
+                        }
+                    });
+                }
             }
         }
         catch (Exception exception) {
