@@ -307,17 +307,7 @@ public class MacroUtils {
                                                                                                     result = Primitive.ISEQUAL;
                                                                                                 }
                                                                                                 else {
-                                                                                                    if (primitive.equals("upload to google drive")) {
-                                                                                                        result = Primitive.UPLOADTOGOOGLEDRIVE;
-                                                                                                    }
-                                                                                                    else {
-                                                                                                        if (primitive.equals("get from google drive")) {
-                                                                                                            result = Primitive.GETFROMGOOGLEDRIVE;
-                                                                                                        }
-                                                                                                        else {
-                                                                                                            result = Primitive.GETURL;
-                                                                                                        }
-                                                                                                    }
+                                                                                                    result = Primitive.GETURL;
                                                                                                 }
                                                                                             }
                                                                                         }
@@ -1109,41 +1099,6 @@ public class MacroUtils {
             
                 break;
                 
-            case UPLOADTOGOOGLEDRIVE:
-                
-                // número de parâmetros é inválido
-                if (parameters.size() != 2) {
-                    logger.error(
-                            "O número de parâmetros da primitiva 'upload to google drive' não confere (a primitiva requer dois parâmetros). Foi encontrado: {}",
-                            parameters
-                    );
-                    throw new ArgumentNumberMismatchException(
-                            String.format(
-                                    "O número de parâmetros da primitiva 'upload to google drive' não confere. (a primitiva requer dois parâmetros). Foi encontrado: %s",
-                                    parameters
-                            )
-                    );
-                }
-                else {
-                    
-                    // cria um novo escopo e expande o primeiro valor
-                    ScopeController.getInstance().createNewScope();
-                    Expander expander = new Expander();
-                    String name = expander.parse(parameters.get(1));
-                    
-                    // cria um novo escopo e expande o segundo valor
-                    ScopeController.getInstance().createNewScope();
-                    expander = new Expander();
-                    String content = expander.parse(parameters.get(2));
-                    
-                    // faz o upload para o Google Drive
-                    GoogleDriveUtils.insert(name, content);
-                    
-                }
-            
-                break;
-                
-            case GETFROMGOOGLEDRIVE:
             case GETURL:
                 
                 // número inválido de parâmetros
@@ -1166,15 +1121,8 @@ public class MacroUtils {
                     // cria um novo escopo e expande o parâmetro
                     ScopeController.getInstance().createNewScope();
                     Expander expander = new Expander();
-                    String parameter = expander.parse(parameters.get(1));
-                    
-                    // verifica qual operação deve ser executada
-                    if (primitive == Primitive.GETFROMGOOGLEDRIVE) {
-                        output = GoogleDriveUtils.get(parameter);
-                    }
-                    else {
-                        output = CommonUtils.get(parameter);
-                    }
+                    String parameter = expander.parse(parameters.get(1));                  
+                    output = CommonUtils.get(parameter);
                     
                 }
                 
